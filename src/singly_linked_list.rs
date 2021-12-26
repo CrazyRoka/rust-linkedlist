@@ -16,19 +16,25 @@ enum ListNode<T> {
     NonEmpty(ListNodeValue<T>),
 }
 
+impl<T> Default for ListNode<T> {
+    fn default() -> Self {
+        Self::Empty
+    }
+}
+
 impl<T> ListNode<T> {
     fn new(item: T, next: Box<ListNode<T>>) -> Self {
-        ListNode::NonEmpty(ListNodeValue::new(item, next))
+        Self::NonEmpty(ListNodeValue::new(item, next))
     }
 
     fn take(&mut self) -> Self {
-        let mut cur = ListNode::Empty;
+        let mut cur = Self::Empty;
         std::mem::swap(&mut cur, self);
         cur
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SinglyLinkedList<T> {
     head: Box<ListNode<T>>,
 }
