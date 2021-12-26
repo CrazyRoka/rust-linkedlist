@@ -61,9 +61,10 @@ impl<T> SinglyLinkedList<T> {
     }
 
     pub fn push(&mut self, item: T) {
-        let mut next = Box::new(ListNode::Empty);
-        std::mem::swap(&mut next, &mut self.head);
-        self.head = Box::new(ListNode::new(item, next));
+        let cur_head = self.head.take();
+        let new_node = Box::new(ListNode::new(item, Box::new(cur_head)));
+
+        self.head = new_node;
         self.size += 1;
     }
 
