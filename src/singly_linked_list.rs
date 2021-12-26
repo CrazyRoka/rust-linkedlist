@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct ListNodeValue<T> {
     item: T,
     next: Box<ListNode<T>>,
@@ -10,7 +10,19 @@ impl<T> ListNodeValue<T> {
     }
 }
 
-#[derive(Debug)]
+impl<T> Clone for ListNodeValue<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            item: self.item.clone(),
+            next: Box::clone(&self.next),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 enum ListNode<T> {
     Empty,
     NonEmpty(ListNodeValue<T>),
@@ -34,15 +46,17 @@ impl<T> ListNode<T> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct SinglyLinkedList<T> {
     head: Box<ListNode<T>>,
+    size: usize,
 }
 
 impl<T> SinglyLinkedList<T> {
     pub fn new() -> Self {
         Self {
             head: Box::new(ListNode::Empty),
+            size: 0,
         }
     }
 
@@ -50,6 +64,7 @@ impl<T> SinglyLinkedList<T> {
         let mut next = Box::new(ListNode::Empty);
         std::mem::swap(&mut next, &mut self.head);
         self.head = Box::new(ListNode::new(item, next));
+        self.size += 1;
     }
 
     pub fn pop(&mut self) -> Option<T> {
@@ -57,10 +72,23 @@ impl<T> SinglyLinkedList<T> {
 
         if let ListNode::NonEmpty(node) = node {
             self.head = node.next;
+            self.size -= 1;
             Some(node.item)
         } else {
             None
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.size
+    }
+}
+
+impl<T> Iterator for SinglyLinkedList<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.pop()
     }
 }
 
@@ -108,11 +136,14 @@ mod tests {
         list.push(3);
         list.push(42);
         assert_eq!(list.pop(), Some(42));
+        assert_eq!(list.len(), 1);
 
         list.push(93);
+        assert_eq!(list.len(), 2);
         assert_eq!(list.pop(), Some(93));
         assert_eq!(list.pop(), Some(3));
         assert_eq!(list.pop(), None);
+        assert_eq!(list.len(), 0);
 
         list.push(20);
         assert_eq!(list.pop(), Some(20));
@@ -151,11 +182,29 @@ mod tests {
             23, 24, 25, 26, 27, 28, 29, 30,
         ];
 
+        assert_eq!(list.len(), vector.len());
         while let Some(value) = list.pop() {
             assert_eq!(Some(value), vector.pop());
         }
 
         assert_eq!(list.pop(), None);
         assert_eq!(vector.pop(), None);
+    }
+
+    #[test]
+    fn test_iter() {
+        let list = slist![1, 2, 3, 4, 5];
+        let vector: Vec<_> = list.collect();
+
+        assert_eq!(vector, vec![5, 4, 3, 2, 1]);
+    }
+
+    #[test]
+    fn test_clone() {
+        let list = slist![1, 2, 3, 4, 5];
+        let cloned = list.clone();
+
+        assert_eq!(list.len(), 5);
+        assert_eq!(list, cloned);
     }
 }
